@@ -1,0 +1,182 @@
+<div class="container">
+    <main>
+        <div class="py-5 text-center">
+            <h2>Web application Talent.com</h2>
+            <p class="lead">Movie List</p>
+        </div>
+
+        <div class="p-2">
+            <div class="input-group">
+                <button type="button" class="btn btn-secondary" onclick="getData()">Update Movie List</button>
+            </div>
+        </div>
+
+        <div class="card p-3">
+            <div class="row mb-2">
+                <div class="col">
+                    <label for="title" class="form-label">Search by title</label>
+                    <input type="text" class="form-control" id="title" placeholder="Name of the movie">
+                </div>
+                <div class="col">
+                    <label for="dates" class="form-label">Date range (Years)</label>
+                    <div class="input-group">
+                        <input type="number" min="1900" max="2023" step="1" class="form-control" id="date_1"
+                            value="2023">
+                        <input type="number" min="1900" max="2023" step="1" class="form-control" id="date_2"
+                            value="2023">
+                    </div>
+                </div>
+                <div class="col">
+                    <label for="sort" class="form-label">Sort by</label>
+                    <select class="form-select" id="sort">
+                        <option selected>Title Asc</option>
+                        <option>Title Desc</option>
+                        <option>Date Asc</option>
+                        <option>Date Desc</option>
+                    </select>
+                </div>
+                <div class="col-2">
+                    <br />
+                    <button type="button" class="btn btn-secondary" onclick="getData()">Submit</button>
+                </div>
+            </div>
+        </div>
+
+
+        <table class="table table-striped table-hover table-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Year</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Poster</th>
+                </tr>
+            </thead>
+             <!-- HERE THE ROWS ARE GOING TO BE PRINTED -->
+            <tbody id="body-table"></tbody>
+        </table>
+
+         <!-- THIS IS A LITTLE DIV HELPER THAT DISPLAYS USEFULL INFORMATION -->
+        <div id="loading"></div>
+    </main>
+</div>
+
+<script>
+    getData();
+
+    async function getData() {
+        // SEARCH DATA 
+
+        let title = document.getElementById('title').value;
+        let date_1 = document.getElementById('date_1').value;
+        let date_2 = document.getElementById('date_2').value;
+        let sort = document.getElementById('sort').value;
+        setLoading();
+        let table_body = document.getElementById('body-table');
+        table_body.replaceChildren();
+
+        // TITLE VALIDATION
+        // IF NO STRING GIVEN, DOES NOT CONTINUES
+        if (!title) {
+            setLoading('title_error');
+        }
+        else {
+            setLoading('loading');
+
+            // DATE RANGE VALIDATION
+            // IF ANY OF THE VARIOUS CONDITIONS ARE MET, IT DOES NOT CONTINUES
+            let date_cons = [
+                Number(date_1) < 1900 || Number(date_1) > 2023,
+                Number(date_2) < 1900 || Number(date_2) > 2023,
+                date_1 && !date_2,
+                !date_1 && date_2,
+                !date_1 && !date_2,
+                date_1 && date_2 && date_2 < date_1,
+            ];
+
+            if (date_cons.some(con => con)) {
+                setLoading('date_error');
+
+            } else {
+                setLoading('loading');
+
+                // ONCE THE TITLE AND DATE RANGES ARE PROPERLY VALIDATE, THIS RETRIEVES THE INFORMATION
+                // THE ORIGINAL API DOES NOT SEARCH BY DATE RANGE, ONLY BY A SINGLE DATE VALUE
+                // SO, WE CALL THE API ONCE EVERY TICK OF THE RANGE AS A WAY TO SOLVE THIS
+                // THIS IS WHY THE FUNCTION IS ASYNC, SO WE CAN USE AWAIT WHILE WE WAIT FOR ALL THE INFO TO BE RETRIEVED
+                let list = [];
+                for (let index = date_1; index <= date_2; index++) {
+                    await fetch(`https://www.omdbapi.com/?s=${title}&y=${index}&apiKey=fc59da33`)
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.Response == "True") {
+                                list.push(...data.Search)
+                            }
+                        });
+                }
+
+                setLoading();
+
+                // ONCE THE DATA IS COLLECTED, HERE IS SORTED AND THEN PRINTED ON THE PAGE
+                list
+                    .sort((a, b) => {
+                        // SORTS THE RESULTS BASED ON THE SELECT
+                        if (sort == "Title Asc") return a.Title > b.Title;
+                        if (sort == "Title Desc") return a.Title < b.Title;
+                        if (sort == "Date Asc") return a.Year - b.Year;
+                        if (sort == "Date Desc") return b.Year - a.Year;
+                        return 0;
+                    })
+                    .map(item => {
+                        // APPENDS THE ROWS OF THE RESULTS INTO THE TABLE
+                        let tr = document.createElement("tr");
+
+                        let th_title = document.createElement("th");
+                        let td_year = document.createElement("td");
+                        let td_type = document.createElement("td");
+                        let td_poster = document.createElement("td");
+
+                        th_title.innerText = item.Title;
+                        td_year.innerText = item.Year;
+                        td_type.innerText = item.Type;
+
+                        let img = document.createElement("img");
+                        img.src = item.Poster != 'N/A' ? item.Poster : '';
+                        img.height = "150";
+                        td_poster.appendChild(img);
+
+                        tr.append(th_title, td_year, td_type, td_poster);
+
+                        table_body.appendChild(tr);
+                    })
+            }
+        }
+    }
+
+    
+    // THIS ALLOWS US TO UPDATE THE CURRENT STATE OF THE LIST AND ALSO TO GIVE INFORMATION TO THE USER ABOUT THE INPUT VALIDATION
+    function setLoading(type) {
+        let div_loading = document.getElementById('loading');
+        div_loading.replaceChildren();
+        let div = document.createElement("div");
+        if (type == 'loading') {
+            div.role = "alert";
+            div.className = "alert alert-secondary";
+            div.innerText = "LOADING INFORMATION";
+            div_loading.appendChild(div);
+        }
+        if (type == 'date_error') {
+            div.role = "alert";
+            div.className = "alert alert-warning";
+            div.innerText = "THE DATE RANGE VALUES ARE NOT VALID, MUST BE BETWEEN 1900 AND 2023";
+            div_loading.appendChild(div);
+        }
+        if (type == 'title_error') {
+            div.role = "alert";
+            div.className = "alert alert-warning";
+            div.innerText = "A SEARCH TITLE IS REQUIRED";
+            div_loading.appendChild(div);
+        }
+    }
+
+</script>

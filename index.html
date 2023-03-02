@@ -1,0 +1,66 @@
+<div class="container">
+    <main>
+        <div class="py-5 text-center">
+            <h2>Web application Talent.com</h2>
+            <p class="lead">In order to continue, you must first create a user ad log into the application.</p>
+        </div>
+
+      
+
+        <div class="row g-3">
+            <div class="col-4"></div>
+            <div class="col-4">
+                <form class="card p-2" class="needs-validation" action="./controllers/index.controller.php" method="post">
+                    <h3>Create account</h3>
+                    <div class="row g-3">
+                        <div class="col">
+
+                            <!-- HERE THE PHP FILE IS GOING TO PLACE ALERTS TO THE USER -->
+                            @ALERT
+                            
+                            <div class="p-2">
+                                <label for="username" class="form-label">username</label>
+                                <input type="text" class="form-control" name="username" placeholder="" value="" required>
+                                <div class="invalid-feedback">
+                                    username is required.
+                                </div>
+                            </div>
+
+                            <div class="p-2">
+                                <label for="phone" class="form-label">phone</label>
+                                <input type="text" class="form-control" name="phone" placeholder="" value="">
+                                <div class="invalid-feedback">
+                                    phone is required.
+                                </div>
+                            </div>
+
+                            <div class="p-2">
+                                <label for="email" class="form-label">email</label>
+                                <input type="text" class="form-control" name="email" placeholder="" value="" required>
+                                <div class="invalid-feedback">
+                                    email is required.
+                                </div>
+                            </div>
+
+                            <div class="p-2">
+                                <label for="password" class="form-label">password</label>
+                                <input type="text" class="form-control" name="password" placeholder="" value="" required>
+                                <div class="invalid-feedback">
+                                    password is required.
+                                </div>
+                            </div>
+
+                            <div class="p-2">
+                                <div class="input-group">
+                                    <button type="submit" class="btn btn-secondary">Submit</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+</div>
